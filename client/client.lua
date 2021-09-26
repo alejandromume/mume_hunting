@@ -1,18 +1,75 @@
-ESX = nil
+ESX = exports['es_extended']:getSharedObject()
 local entities = {} 
-
-Citizen.CreateThread(function()
-    while ESX == nil do
-        TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
-        Citizen.Wait(0)
-    end
-end)
-
 local hasStarted = false
 local isInHuntingZone = false
 local kills = 0
 
-Citizen.CreateThread(function()
+local function LoadAnimDict(dict)
+    while (not HasAnimDictLoaded(dict)) do
+        RequestAnimDict(dict)
+        Wait(10)
+    end    
+end
+
+local function DrawTxt(coords, text, size, font)
+    local coords = vector3(coords.x, coords.y, coords.z)
+
+    local camCoords = GetGameplayCamCoords()
+    local distance = #(coords - camCoords)
+
+    if not size then size = 1 end
+    if not font then font = 0 end
+
+    local scale = (size / distance) * 2
+    local fov = (1 / GetGameplayCamFov()) * 100
+    scale = scale * fov
+
+    SetTextScale(0.0 * scale, 0.55 * scale)
+    SetTextFont(font)
+    SetTextColour(255, 255, 255, 215)
+    SetTextDropshadow(0, 0, 0, 0, 255)
+    SetTextEdge(2, 0, 0, 0, 150)
+    SetTextDropShadow()
+    SetTextOutline()
+    SetTextEntry("STRING")
+    SetTextCentre(true)
+
+    SetDrawOrigin(coords, 0)
+    BeginTextCommandDisplayText('STRING')
+    AddTextComponentSubstringPlayerName(text)
+    EndTextCommandDisplayText(0.0, 0.0)
+    ClearDrawOrigin()
+end
+
+local function DrawText3D(position, text, r,g,b) 
+    local onScreen,_x,_y=World3dToScreen2d(position.x,position.y,position.z+1)
+    local dist = #(GetGameplayCamCoords()-position)
+ 
+    local scale = (1/dist)*2
+    local fov = (1/GetGameplayCamFov())*100
+    local scale = scale*fov
+   
+    if onScreen then
+        if not useCustomScale then
+            SetTextScale(0.0*scale, 0.55*scale)
+        else 
+            SetTextScale(0.0*scale, customScale)
+        end
+        SetTextFont(0)
+        SetTextProportional(1)
+        SetTextColour(r, g, b, 255)
+        SetTextDropshadow(0, 0, 0, 0, 255)
+        SetTextEdge(2, 0, 0, 0, 150)
+        SetTextDropShadow()
+        SetTextOutline()
+        SetTextEntry("STRING")
+        SetTextCentre(1)
+        AddTextComponentString(text)
+        DrawText(_x,_y)
+    end
+end
+
+CreateThread(function()
 
     for _, info in pairs(Config.Markers) do
       blip = AddBlipForCoord(-1133.40, 4948.479, 222.26)
@@ -27,9 +84,9 @@ Citizen.CreateThread(function()
     end
 end)
 
-Citizen.CreateThread(function()
+CreateThread(function()
     while true do
-        Citizen.Wait(0)
+        Wait(0)
 
         for _,v in pairs(Config.Markers) do
 
@@ -136,7 +193,7 @@ Citizen.CreateThread(function()
     end
 end)
 
-Citizen.CreateThread(function()
+CreateThread(function()
     while true do
         Wait(0)
         for i, ped in pairs(entities) do
@@ -164,7 +221,7 @@ Citizen.CreateThread(function()
                         TaskPlayAnim(PlayerPedId(), "amb@medic@standing@kneel@base" ,"base" ,8.0, -8.0, -1, 1, 0, false, false, false )
                         TaskPlayAnim(PlayerPedId(), "anim@gangops@facility@servers@bodysearch@" ,"player_search" ,8.0, -8.0, -1, 48, 0, false, false, false )
 
-                        Citizen.Wait(3000)
+                        Wait(3000)
 
                         ClearPedTasksImmediately(PlayerPedId())
 
@@ -183,7 +240,7 @@ AddEventHandler('esx:giveAnimation', function()
 	TaskPlayAnim(playerPed, "mp_common", "givetake1_a", 8.0, 8.0, 2000, 50, 0, false, false, false)
 end)
 
-Citizen.CreateThread(function()
+CreateThread(function()
     RequestModel(GetHashKey("cs_hunter"))
 	
     while not HasModelLoaded(GetHashKey("cs_hunter")) do
@@ -215,68 +272,3 @@ Citizen.CreateThread(function()
 
     end
 end)
-
-function LoadAnimDict(dict)
-    while (not HasAnimDictLoaded(dict)) do
-        RequestAnimDict(dict)
-        Citizen.Wait(10)
-    end    
-end
-
-function DrawTxt(coords, text, size, font)
-    local coords = vector3(coords.x, coords.y, coords.z)
-
-    local camCoords = GetGameplayCamCoords()
-    local distance = #(coords - camCoords)
-
-    if not size then size = 1 end
-    if not font then font = 0 end
-
-    local scale = (size / distance) * 2
-    local fov = (1 / GetGameplayCamFov()) * 100
-    scale = scale * fov
-
-    SetTextScale(0.0 * scale, 0.55 * scale)
-    SetTextFont(font)
-    SetTextColour(255, 255, 255, 215)
-    SetTextDropshadow(0, 0, 0, 0, 255)
-    SetTextEdge(2, 0, 0, 0, 150)
-    SetTextDropShadow()
-    SetTextOutline()
-    SetTextEntry("STRING")
-    SetTextCentre(true)
-
-    SetDrawOrigin(coords, 0)
-    BeginTextCommandDisplayText('STRING')
-    AddTextComponentSubstringPlayerName(text)
-    EndTextCommandDisplayText(0.0, 0.0)
-    ClearDrawOrigin()
-end
-
-function DrawText3D(position, text, r,g,b) 
-    local onScreen,_x,_y=World3dToScreen2d(position.x,position.y,position.z+1)
-    local dist = #(GetGameplayCamCoords()-position)
- 
-    local scale = (1/dist)*2
-    local fov = (1/GetGameplayCamFov())*100
-    local scale = scale*fov
-   
-    if onScreen then
-        if not useCustomScale then
-            SetTextScale(0.0*scale, 0.55*scale)
-        else 
-            SetTextScale(0.0*scale, customScale)
-        end
-        SetTextFont(0)
-        SetTextProportional(1)
-        SetTextColour(r, g, b, 255)
-        SetTextDropshadow(0, 0, 0, 0, 255)
-        SetTextEdge(2, 0, 0, 0, 150)
-        SetTextDropShadow()
-        SetTextOutline()
-        SetTextEntry("STRING")
-        SetTextCentre(1)
-        AddTextComponentString(text)
-        DrawText(_x,_y)
-    end
-end
