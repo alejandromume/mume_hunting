@@ -29,7 +29,7 @@ end)
 
 Citizen.CreateThread(function()
     while true do
-        Citizen.Wait(0)
+        local wait = 1000
 
         for _,v in pairs(Config.Markers) do
 
@@ -38,6 +38,7 @@ Citizen.CreateThread(function()
             local dist3 = #(GetEntityCoords(PlayerPedId()) - vec3(v.SellMeat.coords.x, v.SellMeat.coords.y, v.SellMeat.coords.z))
             
             if dist <= v.Distance then
+		wait = 0
                 
                 DrawTxt(vec3(v.Pos.x, v.Pos.y, v.Pos.z + 0.4), Locale["hunting_equipment"], 1.0, 4)
 
@@ -73,6 +74,7 @@ Citizen.CreateThread(function()
             end
 
             if dist2 <= 12.0 and hasStarted then
+		wait = 0
 
                 RemoveBlip(blipZone)
 
@@ -113,6 +115,7 @@ Citizen.CreateThread(function()
             end
 
             if dist3 <= v.Distance then
+		wait = 0
 
                 DrawTxt(vec3(v.SellMeat.coords.x, v.SellMeat.coords.y, v.SellMeat.coords.z + 0.4), Locale["sell_meat"], 1.0, 4)
 
@@ -132,18 +135,19 @@ Citizen.CreateThread(function()
             end
 
         end
-
+	Wait(wait)
     end
 end)
 
 Citizen.CreateThread(function()
     while true do
-        Wait(0)
+        local wait = 1000
         for i, ped in pairs(entities) do
             local pedCoords = GetEntityCoords(ped)
             local dist = #(GetEntityCoords(PlayerPedId()) - vec3(pedCoords.x, pedCoords.y, pedCoords.z))
 
             if dist <= 2.0 then
+		wait = 0
                 if IsPedFatallyInjured(ped) or IsPedDeadOrDying(ped, true) then
                     
                     DrawText3D(GetEntityCoords(ped), Locale["kill"] ,247,124,24)
@@ -173,6 +177,7 @@ Citizen.CreateThread(function()
                 end
             end 
         end
+	Wait(wait)
     end
 end)
 
